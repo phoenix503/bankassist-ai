@@ -1,0 +1,173 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+}
+
+enum TransactionStatus {
+  SUCCESS
+  PENDING
+  FAILED
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum DisputeReason {
+  FAILED_TRANSACTION
+  DUPLICATE_TRANSACTION
+  UNRECOGNIZED_TRANSACTION
+  OTHER
+}
+
+enum AuditActorRole {
+  CUSTOMER
+  SUPPORT_AGENT
+  SYSTEM
+}
+
+
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  mobile    String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts Account[]
+  disputes Dispute[]
+}
+
+
+model Account {
+  id            String   @id @default(uuid())
+  accountNumber String   @unique
+  accountType   String
+  balance       Decimal  @db.Decimal(15, 2)
+  currency      String   @default("INR")
+  createdAt     DateTime @default(now())
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  transactions Transaction[]
+}
+
+model Transaction {
+  id              String            @id @default(uuid())
+  reference       String            @unique
+  amount          Decimal           @db.Decimal(15, 2)
+  type            TransactionType
+  status          TransactionStatus
+  description     String
+  beneficiaryName String?
+  beneficiaryRef  String?
+  createdAt       DateTime          @default(now())
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id])
+
+  disputeTransactions DisputeTransaction[]
+}
+
+model PolicyChunk {
+  id         String                     @id @default(uuid()) @db.Uuid
+  chunkId    String                     @unique
+  documentId String
+  title      String
+  source     String
+  content    String                     @db.Text
+  chunkIndex Int
+  embedding  Unsupported("vector(768)")
+  createdAt  DateTime                   @default(now())
+
+  @@index([documentId])
+  @@map("policy_chunks")
+}
+
+model Dispute {
+  id               String        @id @default(uuid())
+  disputeReference String        @unique
+  reason           DisputeReason
+  description      String        @db.Text
+  status           DisputeStatus @default(OPEN)
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  transactions DisputeTransaction[]
+
+  auditLogs DisputeAuditLog[]
+  investigations DisputeInvestigation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId, status])
+  @@index([createdAt])
+}
+
+model DisputeTransaction {
+  id            String @id @default(uuid())
+  disputeId     String
+  transactionId String @unique
+
+  dispute     Dispute     @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@index([disputeId])
+}
+
+
+model DisputeInvestigation {
+  id        String   @id @default(uuid())
+
+  disputeId String
+  dispute   Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+
+  report       Json @db.JsonB
+  policyAnswer Json? @db.JsonB
+
+  createdAt DateTime @default(now())
+
+  @@index([disputeId, createdAt])
+}
+
+
+model DisputeAuditLog {
+  id String @id @default(uuid())
+
+  disputeId String
+  dispute   Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+
+  previousStatus DisputeStatus?
+  newStatus      DisputeStatus
+
+  actorId   String
+  actorRole AuditActorRole
+
+  note      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([disputeId, createdAt])
+  @@index([actorId])
+}
+

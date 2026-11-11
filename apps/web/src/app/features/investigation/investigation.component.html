@@ -1,0 +1,760 @@
+<div class="investigation-toolbar">
+  <a routerLink="/dashboard" class="back-dashboard">
+    <mat-icon>arrow_back</mat-icon>
+    Dashboard
+  </a>
+
+  <div class="toolbar-right">
+    <span class="customer-label">
+      <mat-icon>person</mat-icon>
+      {{ customerName }}
+    </span>
+
+    <button mat-stroked-button color="warn" type="button" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Logout
+    </button>
+  </div>
+</div>
+
+<div class="investigation-page">
+  <div class="page-heading">
+    <div>
+      <span class="breadcrumb">Banking / AI Investigation</span>
+      <h1>AI Investigation Assistant</h1>
+      <p>
+        Tell us about your banking issue. Our AI assistant will investigate it
+        using transaction records and banking policies.
+      </p>
+    </div>
+
+    <div class="ai-badge">
+      <mat-icon>auto_awesome</mat-icon>
+      Gemini AI
+    </div>
+  </div>
+
+  <div class="investigation-grid">
+    <!-- Complaint Form -->
+    <mat-card class="form-card">
+      <div class="card-heading">
+        <div class="heading-icon">
+          <mat-icon>manage_search</mat-icon>
+        </div>
+        <div>
+          <h2>Submit a complaint</h2>
+          <p>Describe the issue you are experiencing.</p>
+        </div>
+      </div>
+
+      <div class="sample-section">
+        <label>Try a sample scenario</label>
+
+        <div class="sample-buttons">
+          <button
+            mat-stroked-button
+            type="button"
+            *ngFor="let sample of sampleComplaints"
+            (click)="selectSample(sample)"
+          >
+            {{ sample.label }}
+          </button>
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submitInvestigation()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Describe your banking issue</mat-label>
+
+          <textarea
+            matInput
+            rows="6"
+            maxlength="2000"
+            formControlName="message"
+            placeholder="For example: I was charged twice for the same transaction..."
+          ></textarea>
+
+          <mat-hint align="end">
+            {{ form.controls.message.value?.length || 0 }}/2000
+          </mat-hint>
+
+          <mat-error *ngIf="form.controls.message.hasError('required')">
+            Please describe your issue.
+          </mat-error>
+
+          <mat-error *ngIf="form.controls.message.hasError('minlength')">
+            Please enter at least 5 characters.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Transaction reference (optional)</mat-label>
+
+          <input
+            matInput
+            formControlName="transactionReference"
+            placeholder="Example: TXN1003"
+          />
+
+          <mat-hint>
+            Leave blank if you do not know the transaction reference.
+          </mat-hint>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="resetInvestigation()"
+            [disabled]="loading || submittingDispute"
+          >
+            Clear
+          </button>
+
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            [disabled]="loading || form.invalid || submittingDispute"
+          >
+            <mat-spinner *ngIf="loading" diameter="18"></mat-spinner>
+            <mat-icon *ngIf="!loading">search</mat-icon>
+            {{ loading ? "Investigating..." : "Investigate complaint" }}
+          </button>
+        </div>
+      </form>
+
+      <div class="error-message" *ngIf="errorMessage">
+        <mat-icon>error_outline</mat-icon>
+        {{ errorMessage }}
+      </div>
+    </mat-card>
+
+    <!-- Results -->
+    <div class="results-column">
+      <mat-card class="empty-card" *ngIf="!investigationResult && !loading">
+        <div class="empty-icon">
+          <mat-icon>psychology</mat-icon>
+        </div>
+
+        <h2>Investigation results</h2>
+        <p>
+          Submit a complaint to see AI classification, transaction evidence and
+          relevant banking policies here.
+        </p>
+      </mat-card>
+
+      <mat-card class="loading-card" *ngIf="loading">
+        <mat-spinner diameter="38"></mat-spinner>
+        <h3>Investigating your complaint</h3>
+        <p>Analyzing transactions and retrieving relevant policies...</p>
+      </mat-card>
+
+      <ng-container *ngIf="investigationResult as result">
+        <!-- Classification -->
+        <mat-card class="result-card">
+          <div class="result-heading">
+            <div>
+              <span class="eyebrow">AI CLASSIFICATION</span>
+              <h2>Investigation summary</h2>
+            </div>
+
+            <span class="confidence">
+              {{
+                (result.classification?.confidence ?? 0) * 100
+                  | number: "1.0-0"
+              }}% confidence
+            </span>
+          </div>
+
+          <div class="category">
+            {{ result.classification?.category || "GENERAL_BANKING" }}
+          </div>
+
+          <p class="explanation">
+            {{ result.classification?.explanation }}
+          </p>
+        </mat-card>
+
+        <!-- Structured Investigation Result -->
+        <mat-card
+          class="result-card"
+          *ngIf="result.investigation as investigation"
+        >
+          <div class="result-heading">
+            <div>
+              <span class="eyebrow">STRUCTURED AI INVESTIGATION</span>
+              <h2>Investigation findings</h2>
+            </div>
+
+            <span
+              class="potential-status"
+              [class.not-grounded]="
+                investigation.investigationStatus ===
+                  'NEEDS_MORE_INFORMATION' ||
+                investigation.investigationStatus === 'TRANSACTION_NOT_FOUND'
+              "
+            >
+              {{ investigation.investigationStatus.replaceAll("_", " ") }}
+            </span>
+          </div>
+
+          <!-- Investigation metadata -->
+          <div class="investigation-metadata">
+            <div>
+              <span>Category</span>
+              <strong>{{ investigation.category.replaceAll("_", " ") }}</strong>
+            </div>
+
+            <div>
+              <span>Classification confidence</span>
+              <strong>
+                {{ investigation.confidence | percent: "1.0-0" }}
+              </strong>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- Transaction Evidence -->
+          <div
+            class="structured-evidence"
+            *ngIf="investigation.evidence.length"
+          >
+            <h3>
+              <mat-icon>receipt_long</mat-icon>
+              Transaction evidence
+            </h3>
+
+            <div
+              class="structured-evidence-item"
+              *ngFor="let evidence of investigation.evidence"
+            >
+              <div class="structured-evidence-info">
+                <strong>{{ evidence.transactionReference }}</strong>
+
+                <span>
+                  {{ evidence.evidenceType.replaceAll("_", " ") }}
+                </span>
+              </div>
+
+              <div class="structured-evidence-amount">
+                <strong>
+                  {{
+                    +evidence.amount
+                      | currency: evidence.currency : "symbol" : "1.2-2"
+                  }}
+                </strong>
+
+                <span
+                  class="transaction-status"
+                  [class.status-success]="
+                    evidence.transactionStatus === 'SUCCESS'
+                  "
+                  [class.status-pending]="
+                    evidence.transactionStatus === 'PENDING'
+                  "
+                  [class.status-failed]="
+                    evidence.transactionStatus === 'FAILED'
+                  "
+                >
+                  {{ evidence.transactionStatus }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <mat-divider *ngIf="investigation.findings.length"></mat-divider>
+
+          <!-- Gemini Findings -->
+          <div
+            class="structured-findings"
+            *ngIf="investigation.findings.length"
+          >
+            <h3>
+              <mat-icon>fact_check</mat-icon>
+              Investigation findings
+            </h3>
+
+            <div
+              class="finding-item"
+              *ngFor="let finding of investigation.findings"
+            >
+              <mat-icon>check_circle_outline</mat-icon>
+              <p>{{ finding }}</p>
+            </div>
+          </div>
+
+          <mat-divider
+            *ngIf="investigation.policyReferences.length"
+          ></mat-divider>
+
+          <!-- Policy References -->
+          <div
+            class="structured-policy"
+            *ngIf="investigation.policyReferences.length"
+          >
+            <h3>
+              <mat-icon>menu_book</mat-icon>
+              Referenced banking policies
+            </h3>
+
+            <div class="policy-reference-list">
+              <span
+                class="policy-reference"
+                *ngFor="let reference of investigation.policyReferences"
+              >
+                {{ reference }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Customer Confirmation Notice -->
+          <div
+            class="confirmation-notice"
+            *ngIf="investigation.requiresCustomerConfirmation"
+          >
+            <mat-icon>info</mat-icon>
+
+            <div>
+              <strong>Customer confirmation required</strong>
+              <p>
+                Please review the investigation findings before proceeding with
+                any dispute submission.
+              </p>
+            </div>
+          </div>
+        </mat-card>
+
+        <!-- Duplicate Candidates and Transaction Selection -->
+        <mat-card
+          class="result-card"
+          *ngIf="result.duplicateCandidates?.length"
+        >
+          <span class="eyebrow">TRANSACTION ANALYSIS</span>
+          <h2>Potential duplicate transactions</h2>
+
+          <p>
+            The following transactions have been identified as potential
+            duplicates. Select the transactions you want to include in your
+            dispute.
+          </p>
+
+          <div
+            class="duplicate-item"
+            *ngFor="let candidate of result.duplicateCandidates"
+          >
+            <div>
+              <strong>{{ candidate.firstTransaction }}</strong>
+              <span>and</span>
+              <strong>{{ candidate.secondTransaction }}</strong>
+            </div>
+
+            <h3>
+              {{
+                +candidate.amount
+                  | currency: candidate.currency : "symbol" : "1.2-2"
+              }}
+            </h3>
+
+            <p>
+              {{ candidate.beneficiaryName || candidate.description }}
+              · {{ candidate.timeDifferenceMs }} ms apart
+            </p>
+
+            <span class="potential-status">
+              {{ candidate.status }}
+            </span>
+
+            <!-- Transaction Selection -->
+            <div class="duplicate-selection">
+              <h4>Select transactions for your dispute</h4>
+
+              <mat-checkbox
+                [checked]="isTransactionSelected(candidate.firstTransaction)"
+                (change)="
+                  toggleTransactionSelection(
+                    candidate.firstTransaction,
+                    $event.checked
+                  )
+                "
+              >
+                Select {{ candidate.firstTransaction }}
+              </mat-checkbox>
+
+              <mat-checkbox
+                [checked]="isTransactionSelected(candidate.secondTransaction)"
+                (change)="
+                  toggleTransactionSelection(
+                    candidate.secondTransaction,
+                    $event.checked
+                  )
+                "
+              >
+                Select {{ candidate.secondTransaction }}
+              </mat-checkbox>
+            </div>
+          </div>
+
+          <!-- Selection Summary -->
+          <div class="selection-summary">
+            <strong>
+              Selected transactions:
+              {{ selectedTransactionReferences.length }}
+            </strong>
+
+            <div *ngIf="selectedTransactionReferences.length">
+              <span
+                class="policy-reference"
+                *ngFor="let reference of selectedTransactionReferences"
+              >
+                {{ reference }}
+              </span>
+            </div>
+
+            <p *ngIf="selectedTransactionReferences.length < 2">
+              Please select at least two transactions to raise a duplicate
+              transaction dispute.
+            </p>
+
+            <p *ngIf="selectedTransactionReferences.length >= 2">
+              You can proceed with your dispute after reviewing the details and
+              confirming your submission.
+            </p>
+          </div>
+        </mat-card>
+
+        <!-- Unrecognized Transaction Selection -->
+        <mat-card
+          class="result-card"
+          *ngIf="isUnrecognizedDispute && investigationEvidence.length > 0"
+        >
+          <span class="eyebrow">CUSTOMER TRANSACTION REVIEW</span>
+          <h2>Select an unrecognized transaction</h2>
+
+          <p>
+            Review the transactions identified during the investigation. Select
+            the transaction you do not recognize.
+          </p>
+
+          <div class="duplicate-selection">
+            <mat-checkbox
+              *ngFor="let evidence of investigationEvidence"
+              [checked]="isTransactionSelected(evidence.transactionReference)"
+              (change)="
+                toggleTransactionSelection(
+                  evidence.transactionReference,
+                  $event.checked
+                )
+              "
+            >
+              <div>
+                <strong>{{ evidence.transactionReference }}</strong>
+                <span>
+                  {{
+                    +evidence.amount
+                      | currency: evidence.currency : "symbol" : "1.2-2"
+                  }}
+                </span>
+                <span>
+                  {{ evidence.transactionStatus }}
+                </span>
+              </div>
+            </mat-checkbox>
+          </div>
+
+          <div class="selection-summary">
+            <strong>
+              Selected transactions:
+              {{ selectedTransactionReferences.length }}
+            </strong>
+
+            <div *ngIf="selectedTransactionReferences.length">
+              <span
+                class="policy-reference"
+                *ngFor="let reference of selectedTransactionReferences"
+              >
+                {{ reference }}
+              </span>
+            </div>
+
+            <p *ngIf="selectedTransactionReferences.length === 0">
+              Select the transaction you do not recognize.
+            </p>
+
+            <p *ngIf="selectedTransactionReferences.length > 1">
+              Please select only one transaction for this dispute.
+            </p>
+
+            <p *ngIf="selectedTransactionReferences.length === 1">
+              You can proceed after reviewing and confirming your selection.
+            </p>
+          </div>
+        </mat-card>
+
+        <!-- Retrieved Transactions -->
+        <mat-card class="result-card" *ngIf="result.transactions?.length">
+          <span class="eyebrow">DATABASE EVIDENCE</span>
+          <h2>Retrieved transactions</h2>
+
+          <div
+            class="evidence-row"
+            *ngFor="let transaction of result.transactions"
+          >
+            <div>
+              <strong>{{ transaction.reference }}</strong>
+              <span>{{ transaction.description }}</span>
+            </div>
+
+            <div class="evidence-amount">
+              {{
+                +transaction.amount
+                  | currency: transaction.currency : "symbol" : "1.2-2"
+              }}
+              <span>{{ transaction.status }}</span>
+            </div>
+          </div>
+        </mat-card>
+
+        <!-- Policy Answer -->
+        <mat-card class="answer-card" *ngIf="result.policyAnswer">
+          <div class="result-heading">
+            <div>
+              <span class="eyebrow">GEMINI + RAG RESPONSE</span>
+              <h2>AI investigation response</h2>
+            </div>
+
+            <span
+              class="grounded-status"
+              [class.not-grounded]="!result.policyAnswer.grounded"
+            >
+              {{
+                result.policyAnswer.grounded
+                  ? "Policy grounded"
+                  : "Not policy grounded"
+              }}
+            </span>
+          </div>
+
+          <div class="answer-text">
+            {{ result.policyAnswer.answer }}
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="citations" *ngIf="result.policyAnswer.citations.length">
+            <h3>
+              <mat-icon>menu_book</mat-icon>
+              Policy references
+            </h3>
+
+            <div
+              class="citation-item"
+              *ngFor="let citation of result.policyAnswer.citations"
+            >
+              <strong>{{ citation.title }}</strong>
+              <span>{{ citation.documentId }} · {{ citation.source }}</span>
+              <span>
+                Relevance: {{ citation.similarity | percent: "1.1-1" }}
+              </span>
+            </div>
+          </div>
+        </mat-card>
+
+        <!-- Customer Dispute Workflow -->
+        <mat-card
+          class="dispute-card"
+          *ngIf="
+            disputeReason &&
+            (isDuplicateDispute
+              ? duplicateCandidates.length > 0
+              : isUnrecognizedDispute
+                ? selectedTransactionReferences.length === 1
+                : form.controls.transactionReference.value?.trim())
+          "
+        >
+          <ng-container *ngIf="!disputeResult">
+            <div class="result-heading">
+              <div>
+                <span class="eyebrow">CUSTOMER ACTION</span>
+                <h2>Raise a dispute</h2>
+              </div>
+
+              <span class="potential-status">Requires confirmation</span>
+            </div>
+
+            <p class="dispute-intro">
+              Based on the investigation, you can submit a dispute for the
+              transaction or transactions below. Please review the details.
+            </p>
+
+            <!-- Duplicate Transaction Summary -->
+            <div class="dispute-summary" *ngIf="isDuplicateDispute">
+              <div>
+                <span>Dispute type</span>
+                <strong>Multiple transaction dispute</strong>
+              </div>
+
+              <div>
+                <span>Selected transactions</span>
+                <strong>{{ selectedTransactionReferences.length }}</strong>
+              </div>
+
+              <div>
+                <span>Dispute reason</span>
+                <strong>{{ disputeReason }}</strong>
+              </div>
+
+              <div>
+                <span>Transaction references</span>
+                <strong *ngFor="let reference of selectedTransactionReferences">
+                  {{ reference }}
+                </strong>
+              </div>
+            </div>
+
+            <!-- Single Transaction Summary -->
+            <div class="dispute-summary" *ngIf="!isDuplicateDispute">
+              <div>
+                <span>Transaction reference</span>
+                <strong>
+                  {{ disputeTransactionReferences[0] }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Dispute reason</span>
+                <strong>{{ disputeReason }}</strong>
+              </div>
+            </div>
+
+            <form [formGroup]="disputeForm">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Dispute description</mat-label>
+
+                <textarea
+                  matInput
+                  rows="4"
+                  maxlength="2000"
+                  formControlName="description"
+                  placeholder="Explain why you are raising this dispute..."
+                ></textarea>
+
+                <mat-hint align="end">
+                  {{ disputeForm.controls.description.value?.length || 0 }}/2000
+                </mat-hint>
+
+                <mat-error
+                  *ngIf="disputeForm.controls.description.hasError('required')"
+                >
+                  Please provide a dispute description.
+                </mat-error>
+
+                <mat-error
+                  *ngIf="disputeForm.controls.description.hasError('minlength')"
+                >
+                  Please enter at least 10 characters.
+                </mat-error>
+              </mat-form-field>
+
+              <div class="confirmation-section">
+                <mat-checkbox formControlName="customerConfirmation">
+                  I confirm that the information provided is accurate and
+                  authorize submission of this dispute for review.
+                </mat-checkbox>
+              </div>
+
+              <div class="dispute-error" *ngIf="disputeErrorMessage">
+                <mat-icon>error_outline</mat-icon>
+                {{ disputeErrorMessage }}
+              </div>
+
+              <div class="dispute-actions">
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  (click)="submitDispute()"
+                  [disabled]="!canSubmitDispute"
+                >
+                  <mat-spinner
+                    *ngIf="submittingDispute"
+                    diameter="18"
+                  ></mat-spinner>
+
+                  <mat-icon *ngIf="!submittingDispute">gavel</mat-icon>
+
+                  {{
+                    submittingDispute
+                      ? "Submitting dispute..."
+                      : "Confirm and submit dispute"
+                  }}
+                </button>
+              </div>
+
+              <p class="dispute-disclaimer">
+                Submitting a dispute creates a review request. It does not
+                guarantee a refund or transaction reversal.
+              </p>
+            </form>
+          </ng-container>
+
+          <!-- Successful Dispute -->
+          <div class="dispute-success" *ngIf="disputeResult">
+            <div class="success-icon">
+              <mat-icon>check_circle</mat-icon>
+            </div>
+
+            <span class="eyebrow">SUBMISSION SUCCESSFUL</span>
+            <h2>Your dispute has been submitted</h2>
+
+            <p>
+              Your dispute has been recorded successfully and is awaiting
+              review.
+            </p>
+
+            <div class="dispute-summary">
+              <div>
+                <span>Dispute reference</span>
+                <strong>{{ disputeResult.disputeReference }}</strong>
+              </div>
+
+              <div>
+                <span>Transaction references</span>
+
+                <strong
+                  *ngFor="
+                    let reference of disputeResult.transactionReferences || []
+                  "
+                >
+                  {{ reference }}
+                </strong>
+
+                <strong
+                  *ngIf="
+                    !disputeResult.transactionReferences?.length &&
+                    disputeResult.transactionReference
+                  "
+                >
+                  {{ disputeResult.transactionReference }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Status</span>
+                <strong>{{ disputeResult.status }}</strong>
+              </div>
+
+              <div>
+                <span>Submitted on</span>
+                <strong>
+                  {{ disputeResult.createdAt | date: "medium" }}
+                </strong>
+              </div>
+            </div>
+          </div>
+        </mat-card>
+      </ng-container>
+    </div>
+  </div>
+</div>

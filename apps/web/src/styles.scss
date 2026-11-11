@@ -1,0 +1,32 @@
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* Global styles */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background: #f5f7fb;
+  color: #1b2942;
+}
+
+/* Material card styling */
+
+.mat-mdc-card {
+  background-color: #ffffff;
+  color: #1b2942;
+}
+
+/* Consistent form controls */
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+}

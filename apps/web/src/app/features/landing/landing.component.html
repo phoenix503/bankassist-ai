@@ -1,0 +1,86 @@
+<div class="landing-container">
+  <header class="landing-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <mat-icon>account_balance</mat-icon>
+      </div>
+      <span>BankAssist <strong>AI</strong></span>
+    </div>
+
+    <div class="header-label">
+      Digital Banking Platform
+    </div>
+  </header>
+
+  <main class="landing-content">
+    <section class="welcome-section">
+      <div class="welcome-badge">
+        <mat-icon>auto_awesome</mat-icon>
+        AI-Powered Banking Assistance
+      </div>
+
+      <h1>
+        Banking made simpler.<br />
+        <span>Assistance made smarter.</span>
+      </h1>
+
+      <p>
+        Welcome to BankAssist AI. Access your banking services,
+        investigate transactions and manage customer accounts
+        through one intelligent platform.
+      </p>
+    </section>
+
+    <section class="portal-section">
+      <mat-card class="portal-card customer-card">
+        <div class="card-icon customer-icon">
+          <mat-icon>person</mat-icon>
+        </div>
+
+        <div class="card-content">
+          <h2>Customer Portal</h2>
+          <p>
+            Access your banking dashboard, view transactions,
+            investigate payment issues and manage disputes.
+          </p>
+        </div>
+
+        <button
+          mat-flat-button
+          color="primary"
+          class="portal-button"
+          routerLink="/customer">
+          Continue as Customer
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </mat-card>
+
+      <mat-card class="portal-card admin-card">
+        <div class="card-icon admin-icon">
+          <mat-icon>admin_panel_settings</mat-icon>
+        </div>
+
+        <div class="card-content">
+          <h2>Admin Console</h2>
+          <p>
+            Create customer profiles, register bank accounts
+            and manage customer information.
+          </p>
+        </div>
+
+        <button
+          mat-flat-button
+          class="portal-button admin-button"
+          routerLink="/admin">
+          Continue as Admin
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </mat-card>
+    </section>
+
+    <footer class="landing-footer">
+      <span>BankAssist AI</span>
+      <span>Intelligent Banking Experience</span>
+    </footer>
+  </main>
+</div>

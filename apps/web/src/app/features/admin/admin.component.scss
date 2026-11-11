@@ -1,0 +1,288 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.admin-container {
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.admin-header {
+  height: 72px;
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-bottom: 1px solid #e8edf5;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1b2942;
+  font-size: 20px;
+  font-weight: 600;
+
+  mat-icon,
+  strong {
+    color: #3867d6;
+  }
+}
+
+.header-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #68768c;
+  font-size: 14px;
+}
+
+.admin-content {
+  max-width: 1250px;
+  margin: auto;
+  padding: 35px 24px 60px;
+}
+
+.page-heading {
+  margin-bottom: 28px;
+
+  h1 {
+    margin: 0 0 8px;
+    color: #1b2942;
+    font-size: 27px;
+  }
+
+  p {
+    color: #68768c;
+    margin: 0;
+  }
+}
+
+.section-card {
+  padding: 26px;
+  margin-bottom: 25px;
+  border-radius: 14px;
+  border: 1px solid #e8edf5;
+  box-shadow: 0 5px 20px rgba(28, 45, 80, 0.04);
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+
+  h2 {
+    margin: 0 0 7px;
+    color: #1b2942;
+    font-size: 19px;
+  }
+
+  p {
+    margin: 0;
+    color: #7a879a;
+    font-size: 13px;
+  }
+}
+
+.heading-icon {
+  color: #3867d6;
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.form-section-title {
+  font-size: 14px;
+  color: #34445e;
+  margin: 22px 0 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 20px;
+}
+
+mat-divider {
+  margin-top: 12px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+
+  button {
+    min-height: 45px;
+    border-radius: 8px;
+    padding: 0 22px;
+  }
+}
+
+.form-error,
+.error-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c62828;
+  font-size: 13px;
+  margin: 12px 0;
+}
+
+.success-panel {
+  margin-top: 25px;
+  padding: 18px;
+  border-radius: 10px;
+  background: #edf8f1;
+  color: #245c3b;
+  overflow-wrap: anywhere;
+
+  p {
+    margin: 10px 0;
+    font-size: 13px;
+  }
+
+  code {
+    word-break: break-all;
+  }
+
+  button {
+    vertical-align: middle;
+  }
+}
+
+.success-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.success-hint {
+  color: #47785a;
+}
+
+.search-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  button {
+    height: 48px;
+  }
+}
+
+.search-field {
+  flex: 1;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th {
+    padding: 15px 12px;
+    text-align: left;
+    color: #68768c;
+    background: #f7f9fc;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #edf0f5;
+    color: #34445e;
+    vertical-align: middle;
+  }
+
+  td strong,
+  td small {
+    display: block;
+  }
+
+  td small {
+    margin-top: 5px;
+    color: #8792a5;
+  }
+}
+
+.customer-id {
+  display: flex;
+  align-items: center;
+  min-width: 180px;
+
+  code {
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+}
+
+.loading-container,
+.empty-state {
+  text-align: center;
+  padding: 35px;
+  color: #7a879a;
+
+  mat-icon {
+    font-size: 38px;
+    width: 38px;
+    height: 38px;
+  }
+}
+
+.loading-container mat-spinner {
+  margin: auto;
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-top: 22px;
+  color: #68768c;
+  font-size: 13px;
+
+  div {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-content {
+    padding: 25px 14px;
+  }
+
+  .section-card {
+    padding: 18px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-row {
+    flex-wrap: wrap;
+
+    .search-field {
+      flex-basis: 100%;
+    }
+  }
+
+  .pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

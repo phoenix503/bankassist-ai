@@ -1,0 +1,196 @@
+
+<div class="support-page">
+
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">BANKASSIST / OPERATIONS</span>
+      <h1>Support Console</h1>
+      <p>Manage customer disputes and investigation requests.</p>
+    </div>
+
+    <button mat-stroked-button (click)="loadDisputes()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </header>
+
+  <section class="summary-grid">
+
+    <mat-card class="summary-card">
+      <span>Total disputes</span>
+      <strong>{{ summary.total }}</strong>
+      <mat-icon>receipt_long</mat-icon>
+    </mat-card>
+
+    <mat-card class="summary-card open">
+      <span>Open</span>
+      <strong>{{ summary.open }}</strong>
+      <mat-icon>inbox</mat-icon>
+    </mat-card>
+
+    <mat-card class="summary-card review">
+      <span>Under review</span>
+      <strong>{{ summary.underReview }}</strong>
+      <mat-icon>manage_search</mat-icon>
+    </mat-card>
+
+    <mat-card class="summary-card resolved">
+      <span>Resolved</span>
+      <strong>{{ summary.resolved }}</strong>
+      <mat-icon>task_alt</mat-icon>
+    </mat-card>
+
+    <mat-card class="summary-card rejected">
+      <span>Rejected</span>
+      <strong>{{ summary.rejected }}</strong>
+      <mat-icon>cancel</mat-icon>
+    </mat-card>
+
+  </section>
+
+  <mat-card class="queue-card">
+
+    <div class="queue-header">
+      <div>
+        <h2>Dispute Queue</h2>
+        <p>Review and manage customer disputes.</p>
+      </div>
+
+      <span class="total-count">
+        {{ total }} records
+      </span>
+    </div>
+
+    <div class="filters">
+
+      <mat-form-field appearance="outline">
+        <mat-label>Search disputes</mat-label>
+        <input
+          matInput
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="applyFilters()"
+          placeholder="Reference or customer name">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select [(ngModel)]="selectedStatus">
+          <mat-option value="">All statuses</mat-option>
+          <mat-option value="OPEN">Open</mat-option>
+          <mat-option value="UNDER_REVIEW">Under review</mat-option>
+          <mat-option value="RESOLVED">Resolved</mat-option>
+          <mat-option value="REJECTED">Rejected</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" (click)="applyFilters()">
+        Apply
+      </button>
+
+      <button mat-button (click)="clearFilters()">
+        Clear
+      </button>
+
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+      <mat-spinner diameter="36"></mat-spinner>
+      <p>Loading disputes...</p>
+    </div>
+
+    <div *ngIf="errorMessage && !loading" class="error-state">
+      {{ errorMessage }}
+      <button mat-button (click)="loadDisputes()">Retry</button>
+    </div>
+
+    <div
+      *ngIf="!loading && !errorMessage && disputes.length === 0"
+      class="empty-state">
+      <mat-icon>inbox</mat-icon>
+      <h3>No disputes found</h3>
+      <p>Try changing your search or filters.</p>
+    </div>
+
+    <div class="table-wrapper" *ngIf="!loading && !errorMessage && disputes.length">
+
+      <table>
+        <thead>
+          <tr>
+            <th>Dispute reference</th>
+            <th>Customer</th>
+            <th>Transaction</th>
+            <th>Amount</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Submitted</th>
+            <th>Activity</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let dispute of disputes; trackBy: trackByDispute">
+
+            <td>
+              <strong>{{ dispute.disputeReference }}</strong>
+            </td>
+
+            <td>
+              <strong>{{ dispute.customer.name }}</strong>
+              <small>{{ dispute.customer.email }}</small>
+            </td>
+
+            <td>{{ dispute.transaction.reference }}</td>
+
+            <td>
+              {{ dispute.transaction.currency }}
+              {{ dispute.transaction.amount }}
+            </td>
+
+            <td>{{ dispute.reason.replace('_', ' ') }}</td>
+
+            <td>
+              <span class="status" [ngClass]="getStatusClass(dispute.status)">
+                {{ dispute.status.replace('_', ' ') }}
+              </span>
+            </td>
+
+            <td>{{ dispute.createdAt | date:'dd MMM yyyy' }}</td>
+
+            <td>
+              <a [routerLink]="['/support/disputes', dispute.id]">
+                View details
+                <mat-icon>arrow_forward</mat-icon>
+              </a>
+            </td>
+
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+    <footer class="pagination" *ngIf="!loading && total > 0">
+      <span>
+        Page {{ page }} of {{ totalPages }}
+      </span>
+
+      <div>
+        <button
+          mat-stroked-button
+          [disabled]="page <= 1"
+          (click)="changePage(-1)">
+          Previous
+        </button>
+
+        <button
+          mat-stroked-button
+          [disabled]="page >= totalPages"
+          (click)="changePage(1)">
+          Next
+        </button>
+      </div>
+    </footer>
+
+  </mat-card>
+</div>

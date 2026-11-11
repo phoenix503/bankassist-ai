@@ -1,0 +1,17 @@
+{
+  "name": "bankassist-ai",
+  "version": "1.0.0",
+  "private": "true",
+  "main": "index.js",
+  "workspaces":[
+    "apps/",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/api"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

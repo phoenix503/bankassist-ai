@@ -1,0 +1,370 @@
+<div class="admin-container">
+  <header class="admin-header">
+    <div class="brand">
+      <mat-icon>account_balance</mat-icon>
+      <span>BankAssist <strong>AI</strong></span>
+    </div>
+
+    <div class="header-label">
+      <mat-icon>admin_panel_settings</mat-icon>
+      Admin Console
+    </div>
+  </header>
+
+  <main class="admin-content">
+    <section class="page-heading">
+      <div>
+        <h1>Customer Management</h1>
+        <p>Manage banking customers and their accounts.</p>
+      </div>
+    </section>
+
+    <!-- Create Customer -->
+    <mat-card class="section-card">
+      <div class="section-heading">
+        <div>
+          <h2>Add New Customer</h2>
+          <p>Create a customer profile and their first bank account.</p>
+        </div>
+
+        <mat-icon class="heading-icon">person_add</mat-icon>
+      </div>
+
+      <form [formGroup]="customerForm" (ngSubmit)="createCustomer()">
+        <h3 class="form-section-title">Customer Information</h3>
+
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Customer Name</mat-label>
+            <input
+              matInput
+              formControlName="name"
+              placeholder="Enter full name"
+            />
+            <mat-error
+              *ngIf="
+                customerForm.controls.name.hasError('required') &&
+                (customerForm.controls.name.touched ||
+                  customerForm.controls.name.dirty)
+              "
+            >
+              Name is required.
+            </mat-error>
+
+            <mat-error
+              *ngIf="
+                customerForm.controls.name.hasError('minlength') &&
+                (customerForm.controls.name.touched ||
+                  customerForm.controls.name.dirty)
+              "
+            >
+              Minimum 2 characters required.
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email Address</mat-label>
+            <input
+              matInput
+              type="email"
+              formControlName="email"
+              placeholder="customer@example.com"
+            />
+            <mat-error
+              *ngIf="
+                customerForm.controls.email.invalid &&
+                (customerForm.controls.email.touched ||
+                  customerForm.controls.email.dirty)
+              "
+            >
+              Enter a valid email address.
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Mobile Number</mat-label>
+            <input
+              matInput
+              formControlName="mobile"
+              placeholder="+919876543210"
+            />
+            <mat-error
+              *ngIf="
+                customerForm.controls.mobile.invalid &&
+                (customerForm.controls.mobile.touched ||
+                  customerForm.controls.mobile.dirty)
+              "
+            >
+              Enter a valid mobile number with country code.
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <h3 class="form-section-title">Initial Bank Account</h3>
+
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Account Number</mat-label>
+            <input
+              matInput
+              formControlName="accountNumber"
+              placeholder="BANK300001"
+            />
+            <mat-error
+              *ngIf="
+                customerForm.controls.accountNumber.invalid &&
+                (customerForm.controls.accountNumber.touched ||
+                  customerForm.controls.accountNumber.dirty)
+              "
+            >
+              Enter an account number (minimum 5 characters).
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Account Type</mat-label>
+            <mat-select formControlName="accountType">
+              <mat-option value="SAVINGS">Savings</mat-option>
+              <mat-option value="CURRENT">Current</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Opening Balance</mat-label>
+            <input matInput type="number" formControlName="balance" />
+            <mat-error
+              *ngIf="
+                customerForm.controls.balance.invalid &&
+                (customerForm.controls.balance.touched ||
+                  customerForm.controls.balance.dirty)
+              "
+            >
+              Enter a valid non-negative balance with up to 2 decimals.
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Currency</mat-label>
+            <input
+              matInput
+              formControlName="currency"
+              maxlength="3"
+              placeholder="INR"
+            />
+            <mat-error
+              *ngIf="
+                customerForm.controls.currency.invalid &&
+                (customerForm.controls.currency.touched ||
+                  customerForm.controls.currency.dirty)
+              "
+            >
+              Enter a 3-letter currency code.
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-error" *ngIf="createErrorMessage">
+          <mat-icon>error_outline</mat-icon>
+          {{ createErrorMessage }}
+        </div>
+
+        <div class="form-actions">
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            [disabled]="creating"
+          >
+            <mat-spinner *ngIf="creating" diameter="18"></mat-spinner>
+            <mat-icon *ngIf="!creating">person_add</mat-icon>
+            {{
+              creating ? "Creating Customer..." : "Create Customer & Account"
+            }}
+          </button>
+        </div>
+      </form>
+
+      <!-- Creation Success -->
+      <div class="success-panel" *ngIf="createdCustomer">
+        <div class="success-heading">
+          <mat-icon>check_circle</mat-icon>
+          Customer created successfully!
+        </div>
+
+        <p>
+          <strong>Name:</strong>
+          {{ createdCustomer.customer.name }}
+        </p>
+
+        <p>
+          <strong>Customer ID:</strong>
+          <code>{{ createdCustomer.customer.id }}</code>
+          <button
+            mat-icon-button
+            type="button"
+            (click)="copyCustomerId(createdCustomer.customer.id)"
+            aria-label="Copy customer ID"
+          >
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        </p>
+
+        <p>
+          <strong>Account Number:</strong>
+          {{ createdCustomer.account.accountNumber }}
+        </p>
+
+        <p class="success-hint">
+          Save the Customer ID. You can use it to access the Customer Portal.
+        </p>
+      </div>
+    </mat-card>
+
+    <!-- Customer List -->
+    <mat-card class="section-card">
+      <div class="section-heading">
+        <div>
+          <h2>Registered Customers</h2>
+          <p>{{ total }} customers registered</p>
+        </div>
+
+        <mat-icon class="heading-icon">groups</mat-icon>
+      </div>
+
+      <div class="search-row">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search customers</mat-label>
+          <input
+            matInput
+            [(ngModel)]="searchTerm"
+            [ngModelOptions]="{ standalone: true }"
+            (keyup.enter)="searchCustomers()"
+            placeholder="Name, email, mobile or account number"
+          />
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="searchCustomers()"
+        >
+          Search
+        </button>
+
+        <button mat-stroked-button type="button" (click)="clearSearch()">
+          Clear
+        </button>
+      </div>
+
+      <div class="loading-container" *ngIf="loading">
+        <mat-spinner diameter="35"></mat-spinner>
+        <p>Loading customers...</p>
+      </div>
+
+      <div class="error-panel" *ngIf="!loading && errorMessage">
+        <mat-icon>error_outline</mat-icon>
+        {{ errorMessage }}
+        <button mat-button color="primary" (click)="loadCustomers()">
+          Retry
+        </button>
+      </div>
+
+      <div
+        class="table-wrapper"
+        *ngIf="!loading && !errorMessage && customers.length > 0"
+      >
+        <table>
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Contact</th>
+              <th>Account Details</th>
+              <th>Balance</th>
+              <th>Customer ID</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let customer of customers">
+              <td>
+                <strong>{{ customer.name }}</strong>
+                <small>{{ customer.email }}</small>
+              </td>
+
+              <td>
+                {{ customer.mobile || "—" }}
+              </td>
+
+              <td>
+                <div *ngFor="let account of customer.accounts">
+                  <strong>{{ account.accountNumber }}</strong>
+                  <small>{{ account.accountType }}</small>
+                </div>
+              </td>
+
+              <td>
+                <div *ngFor="let account of customer.accounts">
+                  {{ account.currency }} {{ account.balance }}
+                </div>
+              </td>
+
+              <td>
+                <div class="customer-id">
+                  <code>{{ customer.id }}</code>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    (click)="copyCustomerId(customer.id)"
+                    aria-label="Copy customer ID"
+                  >
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        class="empty-state"
+        *ngIf="!loading && !errorMessage && customers.length === 0"
+      >
+        <mat-icon>person_search</mat-icon>
+        <h3>No customers found</h3>
+        <p>Try another search or create a new customer.</p>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="!loading && totalPages > 0">
+        <span>
+          Page {{ page }} of {{ totalPages }} ({{ total }} customers)
+        </span>
+
+        <div>
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="previousPage()"
+            [disabled]="page <= 1"
+          >
+            Previous
+          </button>
+
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="nextPage()"
+            [disabled]="page >= totalPages"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </mat-card>
+  </main>
+</div>

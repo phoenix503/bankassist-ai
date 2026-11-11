@@ -1,0 +1,308 @@
+<div class="transactions-page">
+  <!-- Toolbar -->
+  <div class="transactions-toolbar">
+    <a routerLink="/dashboard" class="back-dashboard">
+      <mat-icon>arrow_back</mat-icon>
+      Dashboard
+    </a>
+
+    <div class="toolbar-right">
+      <span class="customer-label">
+        <mat-icon>person</mat-icon>
+        {{ customerName }}
+      </span>
+
+      <button mat-stroked-button color="warn" type="button" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- Heading -->
+  <div class="page-heading">
+    <div>
+      <div class="breadcrumb">Banking / Transactions</div>
+      <h1>Transactions</h1>
+      <p>View and manage your account transaction history.</p>
+    </div>
+
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="loadTransactions()"
+      [disabled]="loading"
+    >
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="state-container" *ngIf="loading">
+    <mat-icon class="state-icon spinning">sync</mat-icon>
+    <p>Loading your transactions...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-message" *ngIf="!loading && errorMessage">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMessage }}</span>
+    <button mat-button color="primary" (click)="loadTransactions()">
+      Retry
+    </button>
+  </div>
+
+  <ng-container *ngIf="!loading && !errorMessage">
+    <!-- Summary -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">Total Transactions</div>
+        <div class="summary-value">
+          {{ transactions.length }}
+        </div>
+        <div class="summary-description">Across all your accounts</div>
+      </div>
+
+      <div class="summary-card credit-card">
+        <div class="summary-label">Total Credits</div>
+        <div class="summary-value">
+          {{ totalCredits | currency: "INR" : "symbol" : "1.2-2" }}
+        </div>
+        <div class="summary-description">Total incoming transactions</div>
+      </div>
+
+      <div class="summary-card debit-card">
+        <div class="summary-label">Total Debits</div>
+        <div class="summary-value">
+          {{ totalDebits | currency: "INR" : "symbol" : "1.2-2" }}
+        </div>
+        <div class="summary-description">Total outgoing transactions</div>
+      </div>
+
+      <div class="summary-card success-card">
+        <div class="summary-label">Successful</div>
+        <div class="summary-value">
+          {{ successfulTransactions }}
+        </div>
+        <div class="summary-description">Successfully processed</div>
+      </div>
+    </div>
+
+    <!-- Accounts -->
+    <section class="section" *ngIf="accounts.length">
+      <div class="section-heading">
+        <h2>Your Accounts</h2>
+        <span>{{ accounts.length }} account(s)</span>
+      </div>
+
+      <div class="accounts-grid">
+        <div class="account-card" *ngFor="let account of accounts">
+          <div class="account-type">{{ account.accountType }} Account</div>
+          <div class="account-number">
+            {{ account.accountNumber }}
+          </div>
+          <div class="account-balance">
+            {{
+              account.balance | currency: account.currency : "symbol" : "1.2-2"
+            }}
+          </div>
+          <div class="account-currency">{{ account.currency }}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transaction List -->
+    <section class="section transaction-section">
+      <div class="section-heading">
+        <div>
+          <h2>All Transactions</h2>
+          <p>Your complete account activity</p>
+        </div>
+        <span class="transaction-count">
+          {{ filteredTransactions.length }} results
+        </span>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <div class="search-field">
+          <mat-icon>search</mat-icon>
+          <input
+            type="text"
+            placeholder="Search description, beneficiary or reference..."
+            [value]="searchTerm"
+            (input)="onSearchChange($any($event.target).value)"
+          />
+        </div>
+
+        <select
+          [value]="selectedStatus"
+          (change)="onStatusChange($any($event.target).value)"
+        >
+          <option value="ALL">All Statuses</option>
+          <option value="SUCCESS">Success</option>
+          <option value="PENDING">Pending</option>
+          <option value="FAILED">Failed</option>
+        </select>
+
+        <select
+          [value]="selectedType"
+          (change)="onTypeChange($any($event.target).value)"
+        >
+          <option value="ALL">All Types</option>
+          <option value="CREDIT">Credit</option>
+          <option value="DEBIT">Debit</option>
+        </select>
+
+        <select
+          [value]="selectedAccount"
+          (change)="onAccountChange($any($event.target).value)"
+        >
+          <option value="ALL">All Accounts</option>
+          <option
+            *ngFor="let account of accounts"
+            [value]="account.accountNumber"
+          >
+            {{ account.accountNumber }}
+          </option>
+        </select>
+
+        <button mat-button type="button" (click)="clearFilters()">Clear</button>
+      </div>
+
+      <!-- Table -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Transaction</th>
+              <th>Reference</th>
+              <th>Account</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              *ngFor="
+                let transaction of paginatedTransactions;
+                trackBy: trackByReference
+              "
+            >
+              <td>
+                <div class="transaction-description">
+                  <div
+                    class="transaction-icon"
+                    [class.credit]="transaction.type === 'CREDIT'"
+                    [class.debit]="transaction.type === 'DEBIT'"
+                  >
+                    <mat-icon>
+                      {{ transaction.type === "CREDIT" ? "south" : "north" }}
+                    </mat-icon>
+                  </div>
+
+                  <div>
+                    <div class="transaction-name">
+                      {{ transaction.description }}
+                    </div>
+                    <div
+                      class="beneficiary"
+                      *ngIf="transaction.beneficiaryName"
+                    >
+                      {{ transaction.beneficiaryName }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <td class="reference">
+                {{ transaction.reference }}
+              </td>
+
+              <td>
+                <span class="account-number-small">
+                  {{ transaction.accountNumber }}
+                </span>
+              </td>
+
+              <td class="date-cell">
+                {{ transaction.createdAt | date: "dd MMM yyyy, hh:mm a" }}
+              </td>
+
+              <td
+                class="amount"
+                [class.credit-amount]="transaction.type === 'CREDIT'"
+                [class.debit-amount]="transaction.type === 'DEBIT'"
+              >
+                {{ transaction.type === "CREDIT" ? "+" : "-" }}
+                {{
+                  transaction.amount
+                    | currency: transaction.currency : "symbol" : "1.2-2"
+                }}
+              </td>
+
+              <td>
+                <span
+                  class="status-badge"
+                  [ngClass]="transaction.status.toLowerCase()"
+                >
+                  {{ transaction.status }}
+                </span>
+              </td>
+            </tr>
+
+            <tr *ngIf="filteredTransactions.length === 0">
+              <td colspan="6">
+                <div class="empty-state">
+                  <mat-icon>receipt_long</mat-icon>
+                  <h3>No transactions found</h3>
+                  <p>Try changing your search or filters.</p>
+                  <button mat-stroked-button (click)="clearFilters()">
+                    Clear Filters
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="filteredTransactions.length">
+        <span>
+          Showing {{ startRecord }}–{{ endRecord }} of
+          {{ filteredTransactions.length }} transactions
+        </span>
+
+        <div class="pagination-actions">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="currentPage === 1"
+            (click)="previousPage()"
+          >
+            <mat-icon>chevron_left</mat-icon>
+            Previous
+          </button>
+
+          <span class="page-number">
+            {{ currentPage }} / {{ totalPages }}
+          </span>
+
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="currentPage === totalPages"
+            (click)="nextPage()"
+          >
+            Next
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</div>

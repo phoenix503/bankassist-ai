@@ -1,0 +1,279 @@
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">B</div>
+      <div>
+        <h2>BankAssist</h2>
+        <span>AI Banking Platform</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <p class="nav-label">MAIN MENU</p>
+
+      <a routerLink="/dashboard" routerLinkActive="active">
+        <span class="nav-icon">▦</span>
+        Dashboard
+      </a>
+
+      <a routerLink="/transactions">
+        <span class="nav-icon">↔</span>
+        Transactions
+      </a>
+
+      <a routerLink="/investigation">
+        <span class="nav-icon">✧</span>
+        AI Investigation
+      </a>
+
+      <a routerLink="/disputes">
+        <span class="nav-icon">▤</span>
+        Disputes
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <p class="nav-label">SUPPORT</p>
+
+      <a routerLink="/support">
+        <span class="nav-icon">◉</span>
+        Help & Support
+      </a>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="profile-avatar">RS</div>
+      <div class="profile-info">
+        <strong>{{ customerName }}</strong>
+        <span>Customer Account</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="topbar">
+      <div>
+        <span class="breadcrumb">Banking / Dashboard</span>
+        <h1>Dashboard</h1>
+      </div>
+
+      <div class="header-actions">
+        <button mat-icon-button aria-label="Notifications">
+          <mat-icon>notifications_none</mat-icon>
+        </button>
+
+        <div class="header-profile">
+          <div class="profile-avatar">{{ customerInitials }}</div>
+          <span>{{ customerName }}</span>
+        </div>
+
+        <button
+          mat-stroked-button
+          color="warn"
+          class="logout-button"
+          (click)="logout()"
+        >
+          <mat-icon>logout</mat-icon>
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <section class="page-content">
+      <!-- Loading State -->
+      <div class="dashboard-state" *ngIf="loading">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading your banking information...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="dashboard-error" *ngIf="!loading && errorMessage">
+        <mat-icon color="warn">error_outline</mat-icon>
+
+        <p>{{ errorMessage }}</p>
+
+        <button mat-stroked-button (click)="loadDashboardData()">Retry</button>
+      </div>
+
+      <!-- Dashboard Content -->
+      <ng-container *ngIf="!loading && !errorMessage">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+          <div>
+            <h2>Welcome back, {{ customerName }} 👋</h2>
+            <p>Here's what's happening with your accounts today.</p>
+          </div>
+
+          <span class="date-label">
+            {{ today | date: "dd MMMM yyyy" }}
+          </span>
+        </div>
+
+        <!-- Account Summary -->
+        <div class="summary-grid">
+          <!-- Total Balance -->
+          <mat-card class="summary-card total-card">
+            <div class="card-top">
+              <span>Total Balance</span>
+              <span class="card-icon">₹</span>
+            </div>
+
+            <h2>
+              {{ totalBalance | currency: currency : "symbol" : "1.2-2" }}
+            </h2>
+
+            <span class="card-description"> Across all your accounts </span>
+          </mat-card>
+
+          <!-- Individual Accounts -->
+          <mat-card class="summary-card" *ngFor="let account of accounts">
+            <div class="card-top">
+              <span>{{ account.accountType }} Account</span>
+              <span class="card-icon">▤</span>
+            </div>
+
+            <h2>
+              {{
+                +account.balance
+                  | currency: account.currency : "symbol" : "1.2-2"
+              }}
+            </h2>
+
+            <span class="card-description">
+              {{ account.accountNumber }}
+            </span>
+          </mat-card>
+        </div>
+
+        <!-- Quick Actions -->
+        <section class="quick-actions">
+          <div class="section-heading">
+            <div>
+              <h2>Quick Actions</h2>
+              <p>Manage your banking activities</p>
+            </div>
+          </div>
+
+          <div class="action-grid">
+            <a routerLink="/transactions" class="action-card">
+              <div class="action-icon blue">↔</div>
+
+              <div>
+                <strong>View Transactions</strong>
+                <span>Check your account activity</span>
+              </div>
+
+              <span class="arrow">→</span>
+            </a>
+
+            <a routerLink="/investigation" class="action-card">
+              <div class="action-icon purple">✧</div>
+
+              <div>
+                <strong>AI Investigation</strong>
+                <span>Investigate a banking issue</span>
+              </div>
+
+              <span class="arrow">→</span>
+            </a>
+
+            <a routerLink="/disputes" class="action-card">
+              <div class="action-icon orange">▤</div>
+
+              <div>
+                <strong>My Disputes</strong>
+                <span>Track your complaints</span>
+              </div>
+
+              <span class="arrow">→</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Recent Transactions -->
+        <section class="transactions-section">
+          <div class="section-heading">
+            <div>
+              <h2>Recent Transactions</h2>
+              <p>Your latest account activity</p>
+            </div>
+
+            <a routerLink="/transactions" class="view-all"> View all → </a>
+          </div>
+
+          <mat-card class="transactions-card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Transaction</th>
+                    <th>Reference</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <!-- Transaction Records -->
+                  <tr *ngFor="let transaction of transactions">
+                    <td>
+                      <div class="transaction-name">
+                        <span
+                          class="transaction-icon"
+                          [class.credit]="transaction.type === 'CREDIT'"
+                        >
+                          {{ transaction.type === "CREDIT" ? "↓" : "↑" }}
+                        </span>
+
+                        {{ transaction.description }}
+                      </div>
+                    </td>
+
+                    <td>{{ transaction.reference }}</td>
+
+                    <td>
+                      {{ transaction.createdAt | date: "dd MMM yyyy" }}
+                    </td>
+
+                    <td
+                      class="amount"
+                      [class.credit-amount]="transaction.type === 'CREDIT'"
+                    >
+                      {{ transaction.type === "CREDIT" ? "+" : "-" }}
+
+                      {{
+                        +transaction.amount
+                          | currency: transaction.currency : "symbol" : "1.2-2"
+                      }}
+                    </td>
+
+                    <td>
+                      <span
+                        class="status"
+                        [ngClass]="transaction.status.toLowerCase()"
+                      >
+                        {{ transaction.status }}
+                      </span>
+                    </td>
+                  </tr>
+
+                  <!-- Empty State -->
+                  <tr *ngIf="transactions.length === 0">
+                    <td colspan="5" class="empty-state">
+                      No transactions available.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </mat-card>
+        </section>
+      </ng-container>
+    </section>
+  </main>
+</div>

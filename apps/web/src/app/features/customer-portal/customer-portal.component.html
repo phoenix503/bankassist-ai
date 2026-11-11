@@ -1,0 +1,70 @@
+<div class="portal-container">
+  <header class="portal-header">
+    <a routerLink="/" class="brand">
+      <mat-icon>account_balance</mat-icon>
+      <span>BankAssist <strong>AI</strong></span>
+    </a>
+
+    <span class="header-label">Customer Portal</span>
+  </header>
+
+  <main class="portal-content">
+    <mat-card class="login-card">
+      <div class="portal-icon">
+        <mat-icon>person</mat-icon>
+      </div>
+
+      <h1>Welcome Back</h1>
+
+      <p class="subtitle">
+        Enter your Customer ID to access your banking dashboard.
+      </p>
+
+      <form [formGroup]="customerForm" (ngSubmit)="continueToDashboard()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Customer ID</mat-label>
+          <mat-icon matPrefix>badge</mat-icon>
+
+          <input
+            matInput
+            formControlName="customerId"
+            placeholder="Enter your Customer ID"
+            autocomplete="off"
+          />
+
+          <mat-error *ngIf="customerForm.controls.customerId.hasError('required')">
+            Customer ID is required.
+          </mat-error>
+        </mat-form-field>
+
+        <div class="error-message" *ngIf="errorMessage">
+          <mat-icon>error_outline</mat-icon>
+          {{ errorMessage }}
+        </div>
+
+        <button
+          mat-flat-button
+          color="primary"
+          class="continue-button"
+          type="submit"
+          [disabled]="loading">
+          <mat-spinner
+            *ngIf="loading"
+            diameter="20">
+          </mat-spinner>
+
+          <span>{{ loading ? 'Verifying...' : 'Continue' }}</span>
+
+          <mat-icon *ngIf="!loading">arrow_forward</mat-icon>
+        </button>
+      </form>
+
+      <div class="back-link">
+        <a routerLink="/">
+          <mat-icon>arrow_back</mat-icon>
+          Back to Home
+        </a>
+      </div>
+    </mat-card>
+  </main>
+</div>

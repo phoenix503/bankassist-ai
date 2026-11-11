@@ -1,0 +1,24 @@
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies and generated output
+node_modules/
+**/node_modules/
+**/.next/
+**/dist/
+**/coverage/
+*.tsbuildinfo
+
+# Local databases, exports, and dumps
+*.dump
+*.sql.gz
+*.backup
+
+# Logs and OS files
+*.log
+.DS_Store

@@ -1,0 +1,196 @@
+<div class="disputes-page">
+  <div class="page-heading">
+    <div>
+      <span class="breadcrumb">Banking / Disputes</span>
+      <h1>My Disputes</h1>
+      <p>Track and manage your submitted banking complaints.</p>
+    </div>
+
+    <div class="page-icon">
+      <mat-icon>receipt_long</mat-icon>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="disputes-state" *ngIf="loading">
+    <mat-spinner diameter="38"></mat-spinner>
+    <p>Loading your disputes...</p>
+  </div>
+
+  <!-- Error -->
+  <mat-card class="error-card" *ngIf="!loading && errorMessage">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ errorMessage }}</p>
+
+    <button mat-stroked-button (click)="loadDisputes()">Retry</button>
+  </mat-card>
+
+  <ng-container *ngIf="!loading && !errorMessage">
+    <!-- Summary -->
+    <div class="summary-grid">
+      <mat-card class="summary-card">
+        <div class="summary-icon blue">
+          <mat-icon>receipt_long</mat-icon>
+        </div>
+        <span>Total disputes</span>
+        <h2>{{ totalDisputes }}</h2>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <div class="summary-icon orange">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <span>Open disputes</span>
+        <h2>{{ openDisputes }}</h2>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <div class="summary-icon purple">
+          <mat-icon>rate_review</mat-icon>
+        </div>
+        <span>Under review</span>
+        <h2>{{ underReviewDisputes }}</h2>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <div class="summary-icon green">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <span>Resolved</span>
+        <h2>{{ resolvedDisputes }}</h2>
+      </mat-card>
+    </div>
+
+    <!-- Dispute List -->
+    <section class="dispute-list-section">
+      <div class="section-heading">
+        <div>
+          <h2>Dispute history</h2>
+          <p>Your submitted complaints and their latest status.</p>
+        </div>
+
+        <button mat-stroked-button (click)="loadDisputes()">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+      </div>
+
+      <!-- Empty -->
+      <mat-card class="empty-card" *ngIf="disputes.length === 0">
+        <div class="empty-icon">
+          <mat-icon>fact_check</mat-icon>
+        </div>
+
+        <h2>No disputes found</h2>
+
+        <p>
+          You haven't submitted any disputes yet. Your future disputes will
+          appear here.
+        </p>
+      </mat-card>
+
+      <!-- Dispute Records -->
+      <div class="dispute-records" *ngIf="disputes.length > 0">
+        <mat-card class="dispute-card" *ngFor="let dispute of disputes">
+          <div class="dispute-header">
+            <div>
+              <span class="eyebrow">DISPUTE REFERENCE</span>
+              <h3>{{ dispute.disputeReference }}</h3>
+            </div>
+
+            <span
+              class="status-badge"
+              [ngClass]="getStatusClass(dispute.status)"
+            >
+              {{ getReasonLabel(dispute.status) }}
+            </span>
+          </div>
+
+          <!-- Dispute Details -->
+          <div class="dispute-details">
+            <div class="detail-item">
+              <span>Dispute reason</span>
+              <strong>{{ getReasonLabel(dispute.reason) }}</strong>
+            </div>
+
+            <div class="detail-item">
+              <span>Number of transactions</span>
+              <strong>{{ dispute.transactions?.length || 0 }}</strong>
+            </div>
+
+            <div class="detail-item">
+              <span>Submitted on</span>
+              <strong>
+                {{ dispute.createdAt | date: "dd MMM yyyy, hh:mm a" }}
+              </strong>
+            </div>
+          </div>
+
+          <!-- Associated Transactions -->
+          <div
+            class="dispute-transactions"
+            *ngIf="dispute.transactions?.length"
+          >
+            <h4>Associated Transactions</h4>
+
+            <div
+              class="transaction-detail"
+              *ngFor="let transaction of dispute.transactions; let i = index"
+            >
+              <div class="detail-item">
+                <span>Transaction {{ i + 1 }} reference</span>
+                <strong>{{ transaction.reference }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Transaction amount</span>
+                <strong>
+                  {{
+                    +transaction.amount
+                      | currency: transaction.currency : "symbol" : "1.2-2"
+                  }}
+                </strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Transaction status</span>
+                <strong>{{ transaction.status }}</strong>
+              </div>
+
+              <div class="detail-item">
+                <span>Account number</span>
+                <strong>{{ transaction.accountNumber }}</strong>
+              </div>
+
+              <div class="detail-item transaction-description">
+                <span>Transaction description</span>
+                <strong>{{ transaction.description }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="dispute-transactions"
+            *ngIf="!dispute.transactions?.length"
+          >
+            <p>Transaction information is not available.</p>
+          </div>
+
+          <!-- Complaint Description -->
+          <div class="dispute-description">
+            <span>Complaint description</span>
+            <p>{{ dispute.description }}</p>
+          </div>
+
+          <!-- Footer -->
+          <div class="dispute-footer">
+            <span>
+              Last updated:
+              {{ dispute.updatedAt | date: "dd MMM yyyy" }}
+            </span>
+          </div>
+        </mat-card>
+      </div>
+    </section>
+  </ng-container>
+</div>

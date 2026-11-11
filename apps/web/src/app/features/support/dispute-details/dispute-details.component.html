@@ -1,0 +1,617 @@
+<div class="details-page">
+  <div class="page-header">
+    <div>
+      <a routerLink="/support" class="back-link">
+        <mat-icon>arrow_back</mat-icon>
+        Back to dispute queue
+      </a>
+
+      <h1>Dispute Details</h1>
+
+      <p *ngIf="dispute">
+        {{ dispute.disputeReference }}
+      </p>
+    </div>
+
+    <span
+      *ngIf="dispute"
+      class="status"
+      [ngClass]="getStatusClass(dispute.status)"
+    >
+      {{ dispute.status.replace("_", " ") }}
+    </span>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading dispute information...</p>
+  </div>
+
+  <div *ngIf="errorMessage && !dispute" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    {{ errorMessage }}
+    <button mat-button routerLink="/support">Back to queue</button>
+  </div>
+
+  <ng-container *ngIf="dispute && !loading">
+    <div *ngIf="successMessage" class="success-message">
+      <mat-icon>check_circle</mat-icon>
+      {{ successMessage }}
+    </div>
+
+    <div *ngIf="errorMessage" class="error-message">
+      <mat-icon>error_outline</mat-icon>
+      {{ errorMessage }}
+    </div>
+
+    <section class="information-grid">
+      <mat-card class="detail-card">
+        <div class="card-heading">
+          <mat-icon>person</mat-icon>
+          <h2>Customer Information</h2>
+        </div>
+
+        <div class="info-row">
+          <span>Customer name</span>
+          <strong>{{ dispute.customer.name }}</strong>
+        </div>
+
+        <div class="info-row">
+          <span>Email</span>
+          <strong>{{ dispute.customer.email }}</strong>
+        </div>
+
+        <div class="info-row">
+          <span>Customer ID</span>
+          <strong>{{ dispute.customer.id }}</strong>
+        </div>
+      </mat-card>
+
+      <mat-card class="detail-card">
+        <div class="card-heading">
+          <mat-icon>receipt_long</mat-icon>
+          <h2>Dispute Information</h2>
+        </div>
+
+        <div class="info-row">
+          <span>Dispute reference</span>
+          <strong>{{ dispute.disputeReference }}</strong>
+        </div>
+
+        <div class="info-row">
+          <span>Reason</span>
+          <strong>{{ dispute.reason.replace("_", " ") }}</strong>
+        </div>
+
+        <div class="info-row">
+          <span>Submitted</span>
+          <strong>
+            {{ dispute.createdAt | date: "dd MMM yyyy, hh:mm a" }}
+          </strong>
+        </div>
+
+        <div class="info-row">
+          <span>Last updated</span>
+          <strong>
+            {{ dispute.updatedAt | date: "dd MMM yyyy, hh:mm a" }}
+          </strong>
+        </div>
+
+        <div class="description">
+          <span>Customer complaint</span>
+          <p>{{ dispute.description }}</p>
+        </div>
+      </mat-card>
+    </section>
+
+    <!-- Multiple Transaction Information -->
+    <mat-card class="detail-card transaction-card">
+      <div class="card-heading">
+        <mat-icon>account_balance</mat-icon>
+        <h2>Transaction Information</h2>
+      </div>
+
+      <div *ngIf="!dispute.transactions?.length" class="empty-audit">
+        <mat-icon>receipt_long</mat-icon>
+        <p>No transaction information available.</p>
+      </div>
+
+      <div
+        *ngFor="let transaction of dispute.transactions; let i = index"
+        class="transaction-item"
+      >
+        <h3>Transaction {{ i + 1 }}</h3>
+
+        <div class="transaction-grid">
+          <div>
+            <span>Transaction reference</span>
+            <strong>{{ transaction.reference }}</strong>
+          </div>
+
+          <div>
+            <span>Amount</span>
+            <strong class="amount">
+              {{ transaction.account.currency }}
+              {{ transaction.amount }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Transaction status</span>
+            <strong>{{ transaction.status }}</strong>
+          </div>
+
+          <div>
+            <span>Transaction type</span>
+            <strong>{{ transaction.type }}</strong>
+          </div>
+
+          <div>
+            <span>Account number</span>
+            <strong>{{ transaction.account.accountNumber }}</strong>
+          </div>
+
+          <div>
+            <span>Account type</span>
+            <strong>{{ transaction.account.accountType }}</strong>
+          </div>
+
+          <div>
+            <span>Beneficiary</span>
+            <strong>
+              {{ transaction.beneficiaryName || "Not available" }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Transaction date</span>
+            <strong>
+              {{ transaction.createdAt | date: "dd MMM yyyy, hh:mm a" }}
+            </strong>
+          </div>
+        </div>
+
+        <div class="description">
+          <span>Transaction description</span>
+          <p>{{ transaction.description }}</p>
+        </div>
+      </div>
+    </mat-card>
+
+    <!-- AI Investigation Dashboard -->
+    <mat-card class="detail-card ai-investigation-card">
+      <div class="card-heading">
+        <mat-icon>psychology</mat-icon>
+        <h2>AI Investigation</h2>
+      </div>
+
+      <p class="section-description">
+        AI-powered transaction analysis, evidence assessment and policy-grounded
+        recommendations for the support agent.
+      </p>
+
+      <!-- Run Investigation -->
+      <div class="ai-actions">
+        <button
+          mat-flat-button
+          color="primary"
+          [disabled]="!canRunInvestigation || runningInvestigation"
+          (click)="runInvestigation()"
+        >
+          <mat-icon>smart_toy</mat-icon>
+
+          {{
+            investigationReport
+              ? "Run New Investigation"
+              : "Run AI Investigation"
+          }}
+        </button>
+
+        <span *ngIf="investigationCreatedAt" class="last-investigation">
+          Last generated:
+          {{ investigationCreatedAt | date: "dd MMM yyyy, hh:mm a" }}
+        </span>
+      </div>
+
+      <!-- Loading -->
+      <div
+        *ngIf="investigationLoading || runningInvestigation"
+        class="ai-loading"
+      >
+        <mat-spinner diameter="30"></mat-spinner>
+
+        <p>
+          {{
+            runningInvestigation
+              ? "AI is investigating transactions and retrieving policies..."
+              : "Loading saved investigation..."
+          }}
+        </p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="investigationError" class="error-message">
+        <mat-icon>error_outline</mat-icon>
+        {{ investigationError }}
+      </div>
+
+      <!-- No Investigation -->
+      <div
+        *ngIf="
+          !investigationLoading && !runningInvestigation && !investigationReport
+        "
+        class="empty-audit"
+      >
+        <mat-icon>psychology</mat-icon>
+        <p>No AI investigation report available yet.</p>
+        <span
+          >Start the review and run an AI investigation to view findings.</span
+        >
+      </div>
+
+      <!-- Investigation Results -->
+      <ng-container *ngIf="investigationReport as report">
+        <mat-divider></mat-divider>
+
+        <!-- Summary -->
+        <section class="ai-section">
+          <h3>
+            <mat-icon>analytics</mat-icon>
+            Investigation Summary
+          </h3>
+
+          <div class="ai-summary-grid">
+            <div class="ai-metric">
+              <span>Category</span>
+              <strong>{{
+                getSuggestedResolutionLabel(report.category)
+              }}</strong>
+            </div>
+
+            <div class="ai-metric">
+              <span>Classifier confidence</span>
+              <strong>{{ report.confidence * 100 | number: "1.0-1" }}%</strong>
+            </div>
+
+            <div class="ai-metric">
+              <span>Investigation status</span>
+              <strong>
+                {{ getSuggestedResolutionLabel(report.investigationStatus) }}
+              </strong>
+            </div>
+          </div>
+        </section>
+
+        <mat-divider></mat-divider>
+
+        <!-- Findings -->
+        <section class="ai-section">
+          <h3>
+            <mat-icon>fact_check</mat-icon>
+            AI Findings
+          </h3>
+
+          <ul class="ai-list">
+            <li *ngFor="let finding of report.findings">
+              {{ finding }}
+            </li>
+          </ul>
+
+          <p *ngIf="!report.findings.length">No findings available.</p>
+        </section>
+
+        <mat-divider></mat-divider>
+
+        <!-- Evidence -->
+        <section class="ai-section">
+          <h3>
+            <mat-icon>verified</mat-icon>
+            Evidence Assessment
+          </h3>
+
+          <div class="evidence-rating">
+            <span>Evidence strength</span>
+
+            <strong
+              [ngClass]="report.evidenceRating.evidenceStrength.toLowerCase()"
+            >
+              {{ report.evidenceRating.evidenceStrength }}
+            </strong>
+          </div>
+
+          <p>{{ report.evidenceRating.explanation }}</p>
+
+          <div *ngIf="report.evidence.length > 0" class="evidence-list">
+            <h4>Supporting transactions</h4>
+
+            <div class="evidence-item" *ngFor="let evidence of report.evidence">
+              <div>
+                <strong>{{ evidence.transactionReference }}</strong>
+                <span>{{ evidence.evidenceType.replace("_", " ") }}</span>
+              </div>
+
+              <div>
+                <strong> {{ evidence.currency }} {{ evidence.amount }} </strong>
+                <span>{{ evidence.transactionStatus }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <mat-divider></mat-divider>
+
+        <!-- Missing Information -->
+        <section class="ai-section">
+          <h3>
+            <mat-icon>help_outline</mat-icon>
+            Missing Information
+          </h3>
+
+          <ul *ngIf="report.missingInformation.length > 0" class="ai-list">
+            <li *ngFor="let item of report.missingInformation">
+              {{ item }}
+            </li>
+          </ul>
+
+          <p *ngIf="!report.missingInformation.length">
+            No additional information has been identified as missing.
+          </p>
+        </section>
+
+        <mat-divider></mat-divider>
+
+        <!-- Suggested Resolution -->
+        <section class="ai-section recommendation-section">
+          <h3>
+            <mat-icon>lightbulb</mat-icon>
+            Suggested Resolution
+          </h3>
+
+          <div class="recommendation-content">
+            <span>AI Recommendation</span>
+
+            <strong>
+              {{ getSuggestedResolutionLabel(report.suggestedResolution) }}
+            </strong>
+          </div>
+
+          <p>{{ report.recommendationRationale }}</p>
+
+          <p class="ai-disclaimer">
+            AI recommendation only. The support agent must independently verify
+            the evidence and make the final decision.
+          </p>
+        </section>
+
+        <mat-divider></mat-divider>
+
+        <!-- Policy Answer -->
+        <section class="ai-section">
+          <h3>
+            <mat-icon>policy</mat-icon>
+            Banking Policy Guidance
+          </h3>
+
+          <ng-container *ngIf="policyAnswer as policy; else noPolicyAnswer">
+            <div class="grounding-status">
+              <mat-icon>
+                {{ policy.grounded ? "verified" : "info" }}
+              </mat-icon>
+
+              <strong>
+                {{
+                  policy.grounded
+                    ? "Policy-grounded response"
+                    : "Not fully grounded"
+                }}
+              </strong>
+            </div>
+
+            <p class="policy-answer">{{ policy.answer }}</p>
+
+            <div *ngIf="policy.citations.length > 0" class="policy-citations">
+              <h4>Policy References</h4>
+
+              <div
+                class="citation-item"
+                *ngFor="let citation of policy.citations"
+              >
+                <strong>{{ citation.documentId }}</strong>
+                <span>{{ citation.title }}</span>
+                <small
+                  >Similarity:
+                  {{ citation.similarity | number: "1.2-2" }}</small
+                >
+              </div>
+            </div>
+
+            <p *ngIf="!policy.citations.length">
+              No policy citations available.
+            </p>
+          </ng-container>
+
+          <ng-template #noPolicyAnswer>
+            <p>Policy answer is not available for this investigation.</p>
+          </ng-template>
+        </section>
+
+        <mat-divider></mat-divider>
+
+        <!-- Investigation Metadata -->
+        <section class="ai-metadata">
+          <span>Report ID: {{ investigationReportId }}</span>
+          <span>
+            Customer confirmation required:
+            {{ report.requiresCustomerConfirmation ? "Yes" : "No" }}
+          </span>
+        </section>
+      </ng-container>
+    </mat-card>
+
+    <mat-card class="detail-card review-card">
+      <div class="card-heading">
+        <mat-icon>fact_check</mat-icon>
+        <h2>Review Actions</h2>
+      </div>
+
+      <p class="section-description">
+        Review the evidence and record your decision with a mandatory note.
+      </p>
+
+      <div *ngIf="canStartReview || canCompleteReview">
+        <mat-form-field appearance="outline" class="review-note">
+          <mat-label>Review note</mat-label>
+          <textarea
+            matInput
+            rows="4"
+            [(ngModel)]="reviewNote"
+            maxlength="2000"
+            placeholder="Explain your review findings or decision..."
+          >
+          </textarea>
+          <mat-hint align="end"> {{ reviewNote.length }}/2000 </mat-hint>
+        </mat-form-field>
+
+        <div class="review-actions">
+          <button
+            *ngIf="canStartReview"
+            mat-flat-button
+            color="primary"
+            [disabled]="submitting"
+            (click)="updateStatus('UNDER_REVIEW')"
+          >
+            <mat-icon>manage_search</mat-icon>
+            Start Review
+          </button>
+
+          <ng-container *ngIf="canCompleteReview">
+            <button
+              mat-flat-button
+              color="primary"
+              [disabled]="submitting"
+              (click)="updateStatus('RESOLVED')"
+            >
+              <mat-icon>check_circle</mat-icon>
+              Resolve Dispute
+            </button>
+
+            <button
+              mat-stroked-button
+              color="warn"
+              [disabled]="submitting"
+              (click)="updateStatus('REJECTED')"
+            >
+              <mat-icon>cancel</mat-icon>
+              Reject Dispute
+            </button>
+          </ng-container>
+        </div>
+
+        <div *ngIf="submitting" class="submitting">
+          <mat-spinner diameter="22"></mat-spinner>
+          Updating dispute...
+        </div>
+      </div>
+
+      <!-- Investigation Notes -->
+      <div
+        *ngIf="dispute.status === 'UNDER_REVIEW'"
+        class="investigation-notes"
+      >
+        <mat-divider></mat-divider>
+
+        <div class="card-heading">
+          <mat-icon>edit_note</mat-icon>
+          <h2>Investigation Notes</h2>
+        </div>
+
+        <p class="section-description">
+          Record your findings and observations during the investigation. You
+          can add multiple notes before making a final decision.
+        </p>
+
+        <mat-form-field appearance="outline" class="review-note">
+          <mat-label>Investigation note</mat-label>
+
+          <textarea
+            matInput
+            rows="4"
+            [(ngModel)]="investigationNote"
+            maxlength="2000"
+            placeholder="Enter your investigation findings..."
+          ></textarea>
+
+          <mat-hint align="end"> {{ investigationNote.length }}/2000 </mat-hint>
+        </mat-form-field>
+
+        <button
+          mat-flat-button
+          color="primary"
+          [disabled]="savingNote"
+          (click)="saveInvestigationNote()"
+        >
+          <mat-icon>save</mat-icon>
+          Save Investigation Note
+        </button>
+
+        <div *ngIf="savingNote" class="submitting">
+          <mat-spinner diameter="22"></mat-spinner>
+          Saving investigation note...
+        </div>
+      </div>
+
+      <div *ngIf="!canStartReview && !canCompleteReview" class="closed-state">
+        <mat-icon>lock</mat-icon>
+        This dispute has reached a final status. No further review actions are
+        available.
+      </div>
+    </mat-card>
+
+    <mat-card class="detail-card audit-card">
+      <div class="card-heading">
+        <mat-icon>history</mat-icon>
+        <h2>Audit Timeline</h2>
+      </div>
+
+      <p class="section-description">
+        Complete history of recorded dispute status changes.
+      </p>
+
+      <div *ngIf="dispute.auditHistory.length === 0" class="empty-audit">
+        <mat-icon>history</mat-icon>
+        <p>No audit history recorded yet.</p>
+      </div>
+
+      <div
+        *ngFor="let log of dispute.auditHistory; let last = last"
+        class="timeline-item"
+      >
+        <div class="timeline-marker">
+          <span></span>
+          <div *ngIf="!last" class="timeline-line"></div>
+        </div>
+
+        <div class="timeline-content">
+          <div class="timeline-heading">
+            <strong>
+              {{ log.previousStatus || "INITIAL" }}
+              →
+              {{ log.newStatus }}
+            </strong>
+
+            <span>
+              {{ log.createdAt | date: "dd MMM yyyy, hh:mm a" }}
+            </span>
+          </div>
+
+          <p>{{ log.note || "No note provided." }}</p>
+
+          <div class="actor-information">
+            <mat-icon>person_outline</mat-icon>
+            {{ log.actorId }} · {{ log.actorRole }}
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </ng-container>
+</div>
