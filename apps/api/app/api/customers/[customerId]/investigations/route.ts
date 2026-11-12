@@ -19,6 +19,7 @@ type RouteContext = {
   }>;
 };
 
+/** Validates a customer inquiry, runs the investigation graph, and returns validated findings. */
 export async function POST(
   request: NextRequest,
   { params }: RouteContext

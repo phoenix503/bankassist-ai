@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 
+/** Checks database connectivity with a lightweight query. */
 export async function GET() {
   try {
     await prisma.$queryRaw`SELECT 1`;

@@ -5,6 +5,7 @@ type RouteContext = {
   params: Promise<{ customerId: string }>;
 };
 
+/** Returns a customer's profile and account summaries. */
 export async function GET(
   _request: Request,
   { params }: RouteContext

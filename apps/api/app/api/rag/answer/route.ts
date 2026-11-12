@@ -8,6 +8,7 @@ const requestSchema = z.object({
   query: z.string().min(5).max(2000),
 });
 
+/** Answers a validated banking-policy question using retrieval augmented generation. */
 export async function POST(request: Request) {
   try {
     const body = await request.json();

@@ -6,6 +6,7 @@ type RouteContext = {
   params: Promise<{ disputeId: string }>;
 };
 
+/** Returns dispute details, linked transactions, customer and audit history. */
 export async function GET(
   _request: Request,
   context: RouteContext

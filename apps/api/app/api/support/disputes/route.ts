@@ -12,6 +12,7 @@ const querySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(10),
 });
 
+/** Returns a filtered, paginated support queue of disputes. */
 export async function GET(request: NextRequest) {
   try {
     const params = Object.fromEntries(

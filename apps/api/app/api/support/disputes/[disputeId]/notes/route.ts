@@ -15,6 +15,7 @@ type RouteContext = {
   }>;
 };
 
+/** Adds a support-agent note to a dispute that is under review. */
 export async function POST(
   request: Request,
   context: RouteContext

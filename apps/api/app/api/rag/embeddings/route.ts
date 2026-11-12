@@ -6,6 +6,7 @@ import {
   generateQueryEmbedding,
 } from "@/lib/rag/embeddings";
 
+/** Generates document and query embeddings and returns short previews. */
 export async function POST(request: Request) {
   try {
     const body = await request.json();

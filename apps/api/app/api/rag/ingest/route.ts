@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { ingestPolicyDocuments } from "@/lib/rag/ingest-policy";
 
+/** Ingests the local policy documents into the searchable policy store. */
 export async function POST() {
   try {
     const result = await ingestPolicyDocuments();

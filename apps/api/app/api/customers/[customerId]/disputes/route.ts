@@ -62,6 +62,7 @@ const disputeSchema = z
     }
   });
 
+/** Builds a unique-looking dispute reference from today's date and random hex. */
 function generateDisputeReference() {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const suffix = randomBytes(3).toString("hex").toUpperCase();
@@ -69,6 +70,7 @@ function generateDisputeReference() {
   return `DSP-${date}-${suffix}`;
 }
 
+/** Validates and creates a dispute linked to one or more eligible customer transactions. */
 export async function POST(
   request: NextRequest,
   context: RouteContext
@@ -295,6 +297,7 @@ export async function POST(
   }
 }
 
+/** Lists a customer's disputes with their linked transaction details. */
 export async function GET(
   request: NextRequest,
   context: RouteContext

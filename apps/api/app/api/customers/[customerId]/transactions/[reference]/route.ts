@@ -8,6 +8,7 @@ type RouteContext = {
   }>;
 };
 
+/** Returns the customer's account summaries and transactions (currently unfiltered by reference). */
 export async function GET(
   _request: Request,
   { params }: RouteContext

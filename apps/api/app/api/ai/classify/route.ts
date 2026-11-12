@@ -9,6 +9,7 @@ const requestSchema = z.object({
   message: z.string().min(5).max(2000),
 });
 
+/** Validates a banking message and returns its AI classification. */
 export async function POST(request: NextRequest) {
   // 1. Parse request body
   let body: unknown;

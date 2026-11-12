@@ -8,6 +8,7 @@ type RouteContext = {
   }>;
 };
 
+/** Lists all transactions across the customer's accounts. */
 export async function GET(
   _request: Request,
   { params }: RouteContext

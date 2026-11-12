@@ -19,6 +19,7 @@ const responseSchema = z.object({
   explanation: z.string(),
 });
 
+/** Directly classifies a banking message with Gemini structured output. */
 export async function POST(request: NextRequest) {
   let body: unknown;
 

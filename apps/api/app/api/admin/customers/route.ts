@@ -27,6 +27,7 @@ const createCustomerSchema = z.object({
   currency: z.string().trim().length(3).default("INR"),
 });
 
+/** Creates a customer and their first account after validating the submitted fields. */
 export async function POST(request: NextRequest) {
   try {
     let body: unknown;
@@ -159,6 +160,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/** Searches and paginates customers with their account summaries. */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

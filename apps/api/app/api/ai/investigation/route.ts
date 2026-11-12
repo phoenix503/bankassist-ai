@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { graph } from "@/lib/agents/investigation.graph";
 
+/** Runs the investigation graph for the supplied customer message. */
 export async function POST(request: Request) {
   try {
     const body = await request.json();

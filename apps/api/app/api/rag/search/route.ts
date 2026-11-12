@@ -9,6 +9,7 @@ const requestSchema = z.object({
   topK: z.number().int().min(1).max(10).optional(),
 });
 
+/** Searches indexed policy documents for chunks relevant to a query. */
 export async function POST(request: Request) {
   try {
     const body = await request.json();

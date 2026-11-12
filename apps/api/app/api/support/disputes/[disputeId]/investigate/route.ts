@@ -12,6 +12,7 @@ type RouteContext = {
   }>;
 };
 
+/** Runs and saves a validated investigation report for a dispute under review. */
 export async function POST(
   request: NextRequest,
   { params }: RouteContext
@@ -181,6 +182,7 @@ export async function POST(
 }
 
 
+/** Retrieves the latest saved investigation report for a dispute. */
 export async function GET(
   request: NextRequest,
   { params }: RouteContext

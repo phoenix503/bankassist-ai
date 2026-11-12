@@ -20,6 +20,7 @@ const allowedTransitions: Record<string, string[]> = {
   REJECTED: [],
 };
 
+/** Applies an allowed dispute status transition and records its audit log atomically. */
 export async function PATCH(
   request: NextRequest,
   context: RouteContext
